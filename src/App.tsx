@@ -19,6 +19,8 @@ function App() {
     {name: "Anchor", prog: "n1281"},
     {name: "Spacer, Reed", prog: "n1310"},
     {name: "Strainer, Gutter", prog: "n1314"},
+    {name: "Hanger - Saw (1311)", prog: "n1311"},
+    {name: "Hanger, Edge (1241)", prog: "n1241"},
     ];
 
   return (
