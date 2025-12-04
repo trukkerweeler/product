@@ -36,7 +36,7 @@ const uploadsDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
 // Serve uploaded files statically at /uploads
-app.use('/uploads', express.static(uploadsDir));
+app.use("/uploads", express.static(uploadsDir));
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadsDir),
@@ -137,39 +137,44 @@ app.post(
   }
 );
 
-    // GET /api/products - return products with their images
-    app.get('/api/products', requireApiKey, async (req, res) => {
-      try {
-        await ensureProductImagesTable();
+// GET /api/products - return products with their images
+app.get("/api/products", requireApiKey, async (req, res) => {
+  try {
+    await ensureProductImagesTable();
 
-        const [rows] = await pool.query(
-          `SELECT p.PRODUCT_ID as productId, p.NAME as name, p.DRAWING_NUMBER as drawingNumber,
+    const [rows] = await pool.query(
+      `SELECT p.PRODUCT_ID as productId, p.NAME as name, p.DRAWING_NUMBER as drawingNumber,
                   pi.IMAGE_ID as imageId, pi.IMAGE_PATH as imagePath
            FROM PRODUCT p
            LEFT JOIN PRODUCT_IMAGES pi ON p.PRODUCT_ID = pi.PRODUCT_ID
            ORDER BY p.PRODUCT_ID, pi.IMAGE_ID`
-        );
+    );
 
-        const productsMap = new Map();
-        for (const r of rows) {
-          const pid = r.productId;
-          if (!productsMap.has(pid)) {
-            productsMap.set(pid, { productId: pid, name: r.name, drawingNumber: r.drawingNumber, images: [] });
-          }
-          if (r.imageId && r.imagePath) {
-            let url = r.imagePath.replace(/\\\\/g, '/');
-            if (!url.startsWith('/')) url = '/' + url;
-            productsMap.get(pid).images.push({ imageId: r.imageId, url });
-          }
-        }
-
-        const products = Array.from(productsMap.values());
-        res.json({ products });
-      } catch (err) {
-        console.error('DB error', err);
-        res.status(500).json({ error: 'Database error', details: err.message });
+    const productsMap = new Map();
+    for (const r of rows) {
+      const pid = r.productId;
+      if (!productsMap.has(pid)) {
+        productsMap.set(pid, {
+          productId: pid,
+          name: r.name,
+          drawingNumber: r.drawingNumber,
+          images: [],
+        });
       }
-    });
+      if (r.imageId && r.imagePath) {
+        let url = r.imagePath.replace(/\\\\/g, "/");
+        if (!url.startsWith("/")) url = "/" + url;
+        productsMap.get(pid).images.push({ imageId: r.imageId, url });
+      }
+    }
+
+    const products = Array.from(productsMap.values());
+    res.json({ products });
+  } catch (err) {
+    console.error("DB error", err);
+    res.status(500).json({ error: "Database error", details: err.message });
+  }
+});
 
 const port = APP_PORT || 3003;
 app.listen(port, () => console.log(`Server listening on port ${port}`));
